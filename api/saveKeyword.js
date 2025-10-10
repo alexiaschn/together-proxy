@@ -1,4 +1,4 @@
-import { Blob } from "@vercel/blob";
+import { get, put } from "@vercel/blob";
 
 export default async function handler(req, res) {
   // --- CORS headers ---
@@ -11,17 +11,11 @@ export default async function handler(req, res) {
           return res.status(200).end();
         }
           try {
-            // Instantiate a Blob client with env variables
-            const blob = new Blob({
-              url: process.env.BLOB_REST_API_URL,
-              token: process.env.BLOB_REST_API_TOKEN,
-            });
-        
-            // Retrieve the CSV file
-            const csvFile = await blob.get("data.csv");  // <-- key is the file name
+            // Fetch the existing CSV from the blob
+            const csvFile = await get("data.csv"); // just the key
             let existing = "";
             if (csvFile) {
-              existing = await csvFile.text();  // fetch content
+              existing = await csvFile.text(); // get the content
             }
         
             // Append new row
@@ -41,8 +35,8 @@ export default async function handler(req, res) {
               newRow.comment
             ].join(",");
         
-            // Upload updated CSV back to Blob
-            await blob.put("data.csv", updatedCSV, { contentType: "text/csv" });
+            // Upload updated CSV
+            await put("data.csv", updatedCSV, { contentType: "text/csv" });
         
             return res.status(200).json({ success: true, row: newRow });
           } catch (err) {
