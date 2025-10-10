@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   // --- CORS headers ---
 
         res.setHeader("Access-Control-Allow-Origin", "*");  // or a specific origin
-        res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
         res.setHeader("Access-Control-Allow-Headers", "Content-Type");
       
         if (req.method === "OPTIONS") {
@@ -30,6 +30,7 @@ export default async function handler(req, res) {
         
             // Append new row
             const newRow = req.body;
+            console.log(newRow)
             const header = "mot,theme,qui,quoi,a_qui,par_quoi,quand,ou,pourquoi,comment";
             let updatedCSV = existing.trim() ? existing + "\n" : header + "\n";
             updatedCSV += [
@@ -51,7 +52,7 @@ export default async function handler(req, res) {
             return res.status(200).json({ success: true, row: newRow });
           } catch (err) {
             console.error("Error updating Blob:", err);
-            console.log(updatedCSV)
+            // console.log(updatedCSV)
             return res.status(500).json({ error: "Failed to update CSV" });
           }
         }
