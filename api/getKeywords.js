@@ -19,9 +19,9 @@ export default async function handler(req, res) {
     console.log("📦 Found blobs:", blobs.map(b => b.pathname));
 
     // look for your keywords blob
-    const blob = blobs.find(b => b.pathname === "keywords.csv");
+    const blob = blobs.find(b => b.pathname === "data.csv");
     if (!blob) {
-      console.log("ℹ️ No keywords.csv blob found, returning empty array");
+      console.log("ℹ️ No data.csv blob found, returning empty array");
       return res.status(200).json([]);
     }
 
