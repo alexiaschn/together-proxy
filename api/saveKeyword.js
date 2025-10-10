@@ -16,7 +16,7 @@ export default async function handler(req, res) {
             return res.status(405).json({ error: "Method not allowed" });
         
           try {
-            const { newRow } = req.body;
+            const newRow = req.body;
             if (!newRow) return res.status(400).json({ error: "Missing newRow" });
         
             // Get existing CSV
