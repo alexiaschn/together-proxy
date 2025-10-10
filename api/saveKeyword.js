@@ -1,4 +1,4 @@
-import { get, put } from "@vercel/blob";
+import { list, put } from "@vercel/blob";
 
 export default async function handler(req, res) {
   // --- CORS headers ---
@@ -11,12 +11,22 @@ export default async function handler(req, res) {
           return res.status(200).end();
         }
           try {
-            // Fetch the existing CSV from the blob
-            const csvFile = await get("data.csv"); // just the key
-            let existing = "";
-            if (csvFile) {
-              existing = await csvFile.text(); // get the content
-            }
+
+                // list all blobs in your storage
+                const { blobs } = await list();
+                console.log("📦 Found blobs:", blobs.map(b => b.pathname));
+            
+                // look for your keywords blob
+                const blob = blobs.find(b => b.pathname === "data.csv");
+                if (!blob) {
+                  console.log("ℹ️ No data.csv blob found, returning empty array");
+                  return res.status(200).json([]);
+                }
+            
+                // fetch its content
+                const response = await fetch(blob.url);
+                const existing = await response.text();
+            
         
             // Append new row
             const newRow = req.body;
