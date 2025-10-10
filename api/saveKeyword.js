@@ -47,7 +47,7 @@ export default async function handler(req, res) {
             ].join(",");
         
             // Upload updated CSV
-            await put("data.csv", updatedCSV, { contentType: "text/csv", access: "public"});
+            await put("data.csv", updatedCSV, { contentType: "text/csv", access: "public", allowOverwrite: true});
         
             return res.status(200).json({ success: true, row: newRow });
           } catch (err) {
