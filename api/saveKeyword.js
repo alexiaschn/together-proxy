@@ -1,4 +1,4 @@
-import { put, list, get } from "@vercel/blob";
+import { Blob } from "@vercel/blob";
 
 export default async function handler(req, res) {
   // --- CORS headers ---
@@ -10,40 +10,44 @@ export default async function handler(req, res) {
         if (req.method === "OPTIONS") {
           return res.status(200).end();
         }
-
-      
-        if (req.method !== "POST")
-            return res.status(405).json({ error: "Method not allowed" });
-        
           try {
-            const newRow = req.body;
-            if (!newRow) return res.status(400).json({ error: "Missing newRow" });
+            // Instantiate a Blob client with env variables
+            const blob = new Blob({
+              url: process.env.BLOB_REST_API_URL,
+              token: process.env.BLOB_REST_API_TOKEN,
+            });
         
-            // Get existing CSV
-            const blobs = await list();
-            const csvFile = blobs.blobs.find(b => b.pathname === "data.csv");
+            // Retrieve the CSV file
+            const csvFile = await blob.get("data.csv");  // <-- key is the file name
             let existing = "";
             if (csvFile) {
-              const response = await get(csvFile.url);
-              existing = await response.text();
+              existing = await csvFile.text();  // fetch content
             }
         
             // Append new row
-            const updated = existing
-              ? existing.trim() + "\n" + newRow.trim()
-              : "mot,theme,qui,quoi,a_qui,par_quoi,quand,ou,pourquoi,comment\n" +
-                newRow.trim();
+            const newRow = req.body;
+            const header = "mot,theme,qui,quoi,a_qui,par_quoi,quand,ou,pourquoi,comment";
+            let updatedCSV = existing.trim() ? existing + "\n" : header + "\n";
+            updatedCSV += [
+              newRow.mot,
+              newRow.theme,
+              newRow.qui,
+              newRow.quoi,
+              newRow.a_qui,
+              newRow.par_quoi,
+              newRow.quand,
+              newRow.ou,
+              newRow.pourquoi,
+              newRow.comment
+            ].join(",");
         
-            // Save to Blob (overwrite)
-            await put("data.csv", updated, {
-              access: "public",
-              token: process.env.BLOB_READ_WRITE_TOKEN,
-              contentType: "text/csv",
-            });
+            // Upload updated CSV back to Blob
+            await blob.put("data.csv", updatedCSV, { contentType: "text/csv" });
         
-            res.status(200).json({ success: true });
+            return res.status(200).json({ success: true, row: newRow });
           } catch (err) {
             console.error("Error updating Blob:", err);
-            res.status(500).json({ error: "Failed to update CSV" });
+            return res.status(500).json({ error: "Failed to update CSV" });
           }
         }
+        
