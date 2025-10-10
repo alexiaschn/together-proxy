@@ -41,6 +41,7 @@ export default async function handler(req, res) {
             return res.status(200).json({ success: true, row: newRow });
           } catch (err) {
             console.error("Error updating Blob:", err);
+            console.log(updatedCSV)
             return res.status(500).json({ error: "Failed to update CSV" });
           }
         }
