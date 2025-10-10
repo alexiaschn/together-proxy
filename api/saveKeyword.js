@@ -1,4 +1,4 @@
-import { kv } from "@vercel/kv";
+import { put, list, get } from "@vercel/blob";
 
 export default async function handler(req, res) {
   // --- CORS headers ---
@@ -12,22 +12,38 @@ export default async function handler(req, res) {
         }
 
       
-  // 1️⃣ Only accept POST
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-  // 2️⃣ Get the keyword row
-  const row = req.body;
-  if (!row || !row.mot) return res.status(400).json({ error: "Invalid row" });
-
-  try {
-    // 3️⃣ Save in KV
-    // Key: "keyword:<mot>"
-    // Value: JSON string of the row
-    await kv.set(`keyword:${row.mot}`, JSON.stringify(row));
-
-    return res.status(200).json({ success: true });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Failed to save keyword" });
-  }
-}
+        if (req.method !== "POST")
+            return res.status(405).json({ error: "Method not allowed" });
+        
+          try {
+            const { newRow } = req.body;
+            if (!newRow) return res.status(400).json({ error: "Missing newRow" });
+        
+            // Get existing CSV
+            const blobs = await list();
+            const csvFile = blobs.blobs.find(b => b.pathname === "data.csv");
+            let existing = "";
+            if (csvFile) {
+              const response = await get(csvFile.url);
+              existing = await response.text();
+            }
+        
+            // Append new row
+            const updated = existing
+              ? existing.trim() + "\n" + newRow.trim()
+              : "mot,theme,qui,quoi,a_qui,par_quoi,quand,ou,pourquoi,comment\n" +
+                newRow.trim();
+        
+            // Save to Blob (overwrite)
+            await put("data.csv", updated, {
+              access: "public",
+              token: process.env.BLOB_READ_WRITE_TOKEN,
+              contentType: "text/csv",
+            });
+        
+            res.status(200).json({ success: true });
+          } catch (err) {
+            console.error("Error updating Blob:", err);
+            res.status(500).json({ error: "Failed to update CSV" });
+          }
+        }
