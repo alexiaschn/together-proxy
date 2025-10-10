@@ -31,7 +31,7 @@ Suit les exemples suivants:
 arts plastiques,transformer,~plusieurs art,matériau,,,,,,
 autochtone,~voix passive situer,communauté,,,,antériorité,,,,
 première nation,~voix passive situer,communauté,,,,antériorité,,,,
-C'est à ton tour avec le mot-clé : "${keyword}".`;
+C'est à ton tour avec le mot-clé : "${keyword}". Répond seulement avec le CSV`;
 
   try {
     const response = await fetch("https://api.together.xyz/v1/chat/completions", {
