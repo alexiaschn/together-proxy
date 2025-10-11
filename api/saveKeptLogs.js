@@ -15,14 +15,8 @@ export default async function handler(req, res) {
   const blobName = "keptLogs.json";
 
   try {
-    // --- Retrieve existing logs ---
-    let existingLogs = [];
-    const existing = await get(blobName).catch(() => null);
-
-    if (existing?.url) {
-      const file = await fetch(existing.url);
+      const file = await fetch(blobName.url);
       existingLogs = await file.json().catch(() => []);
-    }
 
     if (req.method === "POST") {
       const { logs, userId } = req.body;
