@@ -1,6 +1,7 @@
 import { put, get } from "@vercel/blob";
+import crypto from "crypto";
 
-// 🔧 Helper to enable CORS (needed for browser extension)
+// Enable CORS for browser extensions
 function setCORS(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -14,33 +15,48 @@ export default async function handler(req, res) {
   const blobName = "keptLogs.json";
 
   try {
+    // --- Retrieve existing logs ---
+    let existingLogs = [];
+    const existing = await get(blobName).catch(() => null);
+
+    if (existing?.url) {
+      const file = await fetch(existing.url);
+      existingLogs = await file.json().catch(() => []);
+    }
+
     if (req.method === "POST") {
-      // Expecting an array of log entries
-      const keptLogs = req.body;
-      if (!Array.isArray(keptLogs)) {
-        return res.status(400).json({ error: "Body must be an array" });
+      const { logs, userId } = req.body;
+
+      if (!Array.isArray(logs)) {
+        return res.status(400).json({ error: "Body must include an array 'logs'" });
       }
 
-      // Save as JSON to Vercel Blob (public so frontend can read)
-      await put(blobName, JSON.stringify(keptLogs, null, 2), {
+      // Generate a new userId if not provided
+      const id = userId || crypto.randomUUID();
+
+      // Append new session entry
+      const newSession = {
+        userId: id,
+        timestamp: new Date().toISOString(),
+        logs,
+      };
+
+      const updatedLogs = [...existingLogs, newSession];
+
+      await put(blobName, JSON.stringify(updatedLogs, null, 2), {
         access: "public",
         contentType: "application/json",
       });
 
-      return res.status(200).json({ success: true, count: keptLogs.length });
+      return res.status(200).json({
+        success: true,
+        userId: id,
+        totalSessions: updatedLogs.length,
+      });
     }
 
     if (req.method === "GET") {
-      // Retrieve the saved JSON file
-      const file = await get(blobName);
-      if (!file?.url) {
-        return res.status(404).json({ error: "No kept logs found" });
-      }
-
-      const response = await fetch(file.url);
-      const data = await response.json();
-
-      return res.status(200).json(data);
+      return res.status(200).json(existingLogs);
     }
 
     return res.status(405).json({ error: "Method not allowed" });
