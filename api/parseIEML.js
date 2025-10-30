@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   }
 
   const model = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free";
-  const prompt = `Décompose sémantiquement le mot-clé "${keyword}" dans un CSV avec ces valeurs :
+  const prompt = `Décompose sémantiquement le mot-clé "${keyword}" dans un CSV. Pour t'aider à cerner le contexte, ce mot-clé appartient à un champ qui contient aussi "${keywords}. Ton CSV contiendra ces valeurs :
 mot,theme,qui,quoi,a_qui,par_quoi,quand,ou,pourquoi,comment
 Suit les exemples suivants:
 arts plastiques,transformer,~plusieurs art,matériau,,,,,,
