@@ -72,7 +72,7 @@ async function selectPagesForKeyword(keyword) {
    littératie visuelle numérique,compétence,,culture visuelle,,,,,*dans le contexte de technique numérique, 
    didactique de la lecture numérique,enseignement,,lire,,*par le moyen de technique numérique,,,,*avec méthode" 
    
-   Liste des pages disponibles: nb_mots_,page-title
+   Liste des pages disponibles: nb_mots,page-title
     14,Functional roles
 1,Indications
 22,Primitives,symmetry
@@ -173,7 +173,7 @@ async function selectPagesForKeyword(keyword) {
 17,Tools to gather and hold
 21,Trunk and Head
 
-   De quelles pages as-tu besoin pour traduire "${keyword}" ?
+   De quelles pages as-tu besoin pour traduire "${keyword}" ? Tu peux sélectionner jusqu'à 5 pages. 
 Répond uniquement avec les titres exacts des pages (page-title) séparés par des virgules.`;
 
   const response = await fetch("https://api.together.xyz/v1/chat/completions", {
@@ -209,7 +209,7 @@ Français: ${p.fr.join(", ")}`
   ).join("\n\n"); // suppr anglais pour réduire input size
 
   const prompt = `Tu es un agent traducteur IEML. 
-Tu disposes des pages suivantes du dictionnaire IEML : 
+Tu disposes des pages suivantes du dictionnaire IEML pour traduire le mot "${keyword}":  
 
 ${context}
 
