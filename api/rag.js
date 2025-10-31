@@ -73,30 +73,27 @@ async function selectPagesForKeyword(keyword) {
    didactique de la lecture numérique,enseignement,,lire,,*par le moyen de technique numérique,,,,*avec méthode" 
    
    Liste des pages disponibles: nb_mots,page-title
-    14,Functional roles
-1,Indications
-22,Primitives,symmetry
+14,Functional roles
+22,Primitives
 221,Technical functions
 13,Climates
 119,Human development
-12,Interaction,symmetry
-1,links for auxiliaries of place
+12,Interaction
 39,Nature's layers
 35,Operations
 62,Physical movement & action
 15,Time units - Calendar
-40,Actions & agents,symmetry
+40,Actions & agents
 169,Basic qualities
 15,Landscapes
-1,links for Human development (M_M_.O_M
 24,Sky & meteorology
 42,Symmetries
 15,Tme units - Chronometer
-34,Weight,pressure,alternance
+34,Weight & pressure & alternance
 25,Animals & plants
 13,Cardinals
 12,Continents and regions
-33,Human experience,sym
+33,Human experience
 11,Moments of the day
 17,Movements in environments
 251,Values
@@ -136,7 +133,6 @@ async function selectPagesForKeyword(keyword) {
 22,Cutting tools
 19,Data curation & critical thinking
 251,Disciplines & their objects
-1,doc_name
 15,Documentation metadata
 19,Genders
 16,Geometrical concepts
@@ -149,7 +145,7 @@ async function selectPagesForKeyword(keyword) {
 54,Inflections for verbs
 19,Knowledge qualities
 30,Layers of symbolic cognition
-19,Lifting,throwing,piercing
+19,Lifting & throwing & piercing
 115,Negativity
 118,Noetic categories
 27,Non commutative junctions
@@ -168,7 +164,7 @@ async function selectPagesForKeyword(keyword) {
 244,Signs & semiotic functions
 28,Size
 340,Social roles & institutions
-10,Solids,construction
+10,Solids & construction
 15,Textile
 17,Tools to gather and hold
 21,Trunk and Head
