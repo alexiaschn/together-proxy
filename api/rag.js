@@ -59,8 +59,8 @@ export default async function handler(req, res) {
 
 // 🔹 Phase 1: choose pages
 async function selectPagesForKeyword(keyword) {
-  const model = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free";
-
+  //const model = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free";
+  const model = "google/gemma-3n-E4B-it";
   const prompt = `IEML est un langage qui permet de décomposer sémantiquement un concept à partir des aspects "mot,theme,qui,quoi,à qui,par quoi,quand,où,pourquoi,comment".
    Un concept ne peut être décomposé qu'à partir des mots déjà traduits en IEML et présents dans le dictionnaire. Pour traduire le mot-clé "${keyword}" en IEML tu auras du vocabulaire présents dans certaines pages du dictionnaire IEML.
    Choisis les pages dont tu as besoin pour ta traduction. 
