@@ -223,7 +223,7 @@ Exemples de mots-clés traduits en IEML:
    théorie musico-littéraire,théorie,,littérature &et musique,,,,,,
    littératie visuelle numérique,compétence,,culture visuelle,,,,,*dans le contexte de technique numérique, 
    didactique de la lecture numérique,enseignement,,lire,,*par le moyen de technique numérique,,,,*avec méthode" 
-Donne uniquement la ligne de traduction en CSV, sans texte supplémentaire pour le mot-clé "${keyword}`;
+Donne uniquement la ligne CSV finale,correspondant au mot-clé "${keyword}", sans explication, ni avant ni après.`;
 
   const response = await fetch("https://api.together.xyz/v1/chat/completions", {
     method: "POST",
@@ -244,5 +244,7 @@ Donne uniquement la ligne de traduction en CSV, sans texte supplémentaire pour 
   }
 
   const data = await response.json();
+  console.log("Together raw response:", JSON.stringify(data, null, 2));
+
   return data.choices?.[0]?.message?.content?.trim() || "";
 }
