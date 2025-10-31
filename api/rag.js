@@ -197,7 +197,7 @@ Répond uniquement avec les titres exacts des pages (page-title) séparés par d
 
 // 🔹 Phase 2: translation
 async function translateKeywordToIEML(keyword, pageData) {
-  const model = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free";
+  const model = "google/gemma-3n-E4B-it";;
 
   const context = pageData.map(p =>
     `### ${p["page-title"]}
