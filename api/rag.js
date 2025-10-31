@@ -215,8 +215,15 @@ Tu disposes des pages suivantes du dictionnaire IEML :
 ${context}
 
 Traduis le mot-clé "${keyword}" en IEML sous la forme :
-mot,theme,qui,quoi,a_qui,par_quoi,quand,ou,pourquoi,comment
-Donne uniquement la ligne de traduction, sans texte supplémentaire.`;
+mot,theme,qui,quoi,a_qui,par_quoi,quand,ou,pourquoi,comment. 
+Exemples de mots-clés traduits en IEML:
+   "mot,theme,qui,quoi,a_qui,par_quoi,quand,ou,pourquoi,comment 
+   arts plastiques,transformer,~plusieurs art,matériau,,,,,, 
+   théorie de la littérature,théorie,,littérature,,,,,, 
+   théorie musico-littéraire,théorie,,littérature &et musique,,,,,,
+   littératie visuelle numérique,compétence,,culture visuelle,,,,,*dans le contexte de technique numérique, 
+   didactique de la lecture numérique,enseignement,,lire,,*par le moyen de technique numérique,,,,*avec méthode" 
+Donne uniquement la ligne de traduction en CSV, sans texte supplémentaire pour le mot-clé "${keyword}`;
 
   const response = await fetch("https://api.together.xyz/v1/chat/completions", {
     method: "POST",
