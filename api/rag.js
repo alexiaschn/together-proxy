@@ -36,16 +36,36 @@ export default async function handler(req, res) {
     const response = await fetch(blob.url);
     const dictionary = await response.json();
 
-    // 3️⃣ Filter the relevant pages
-    const pageData = dictionary.filter(entry =>
+    // 3️⃣ Filter relevant pages
+    let relevantPages = dictionary.filter(entry =>
       selectedPages.includes(entry["page-title"])
     );
-    console.log("📘 Retrieved pages:", pageData.map(p => p["page-title"]));
 
-    // 4️⃣ Translate keyword using the pages as context
-    const translation = await translateKeywordToIEML(keyword, pageData);
+    // 🧮 4️⃣ Token budgeting: limit total context size dynamically
+    const TOKEN_BUDGET = 7000; // safe limit under Together free models
+    let totalTokens = 0;
+    const limitedPages = [];
 
-    return res.status(200).json({ keyword, pages: selectedPages, translation });
+    for (const page of relevantPages) {
+      const pageText = (page.fr || []).join(", ");
+      const pageTokens = estimateTokens(pageText);
+      if (totalTokens + pageTokens > TOKEN_BUDGET) break;
+      totalTokens += pageTokens;
+      limitedPages.push(page);
+    }
+
+    console.log(`🧠 Selected ${limitedPages.length} pages within ${totalTokens} token budget:`);
+    console.log(limitedPages.map(p => p["page-title"]).join(", "));
+
+    // 5️⃣ Translate keyword using the limited pages
+    const translation = await translateKeywordToIEML(keyword, limitedPages);
+
+    return res.status(200).json({
+      keyword,
+      pages: limitedPages.map(p => p["page-title"]),
+      translation,
+      token_estimate: totalTokens,
+    });
 
   } catch (err) {
     console.error("❌ Error in IEML agent handler:", err);
@@ -59,118 +79,15 @@ export default async function handler(req, res) {
 
 // 🔹 Phase 1: choose pages
 async function selectPagesForKeyword(keyword) {
-  //const model = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free";
   const model = "google/gemma-3n-E4B-it";
   const prompt = `IEML est un langage qui permet de décomposer sémantiquement un concept à partir des aspects "mot,theme,qui,quoi,à qui,par quoi,quand,où,pourquoi,comment".
-   Un concept ne peut être décomposé qu'à partir des mots déjà traduits en IEML et présents dans le dictionnaire. Pour traduire le mot-clé "${keyword}" en IEML tu auras du vocabulaire présents dans certaines pages du dictionnaire IEML.
-   Choisis les pages dont tu as besoin pour ta traduction. 
-   Exemples de mots-clés traduits en IEML:
-   "mot,theme,qui,quoi,a_qui,par_quoi,quand,ou,pourquoi,comment 
-   arts plastiques,transformer,~plusieurs art,matériau,,,,,, 
-   théorie de la littérature,théorie,,littérature,,,,,, 
-   théorie musico-littéraire,théorie,,littérature &et musique,,,,,,
-   littératie visuelle numérique,compétence,,culture visuelle,,,,,*dans le contexte de technique numérique, 
-   didactique de la lecture numérique,enseignement,,lire,,*par le moyen de technique numérique,,,,*avec méthode" 
-   
-   Liste des pages disponibles: nb_mots,page-title
-14,Functional roles
-22,Primitives
-221,Technical functions
-13,Climates
-119,Human development
-12,Interaction
-39,Nature's layers
-35,Operations
-62,Physical movement & action
-15,Time units - Calendar
-40,Actions & agents
-169,Basic qualities
-15,Landscapes
-24,Sky & meteorology
-42,Symmetries
-15,Tme units - Chronometer
-34,Weight & pressure & alternance
-25,Animals & plants
-13,Cardinals
-12,Continents and regions
-33,Human experience
-11,Moments of the day
-17,Movements in environments
-251,Values
-26,causation
-12,Oceans and seas
-13,Ordinals
-20,Orientation in time
-16,Parts of plants
-48,Sensori-motor exp. & control
-10,North America
-26,Proportions
-16,time
-33,Time and movement
-10,Central America & Caribbean
-45,Life cycles
-38,place
-20,Continuities & discontinuities
-44,intention
-10,South America
-10,Europe
-51,Generative mutations
-20,manner
-10,Southern Africa
-10,Asia
-10,South Asia
-10,Oceania
-59,Anthropological functions
-15,Arms and Legs
-20,Causatives
-13,Collective intelligence hexad
-55,Colors
-6,Commutative junctions
-249,Competencies & their objects
-81,Complex feelings
-18,Composition qualities
-86,Conditions for activity
-22,Cutting tools
-19,Data curation & critical thinking
-251,Disciplines & their objects
-15,Documentation metadata
-19,Genders
-16,Geometrical concepts
-56,Geometrical figures
-63,Gradients
-7,Grammatical persons
-17,Hands and Feet
-41,History and Cultural forms
-47,Inflections for nouns
-54,Inflections for verbs
-19,Knowledge qualities
-30,Layers of symbolic cognition
-19,Lifting & throwing & piercing
-115,Negativity
-118,Noetic categories
-27,Non commutative junctions
-139,Obstacles
-18,Opposition qualities
-77,Performative acts
-22,Personality types
-38,Philosophical dialectics
-19,Plus and minus qualities
-70,Positions & objects in space
-18,Possession hexad
-25,Rational inquiry
-19,Relationship qualities
-49,School years or grade levels
-27,Shapes & look
-244,Signs & semiotic functions
-28,Size
-340,Social roles & institutions
-10,Solids & construction
-15,Textile
-17,Tools to gather and hold
-21,Trunk and Head
+   Un concept ne peut être décomposé qu'à partir des mots déjà traduits en IEML et présents dans le dictionnaire. 
+   Pour traduire le mot-clé "${keyword}" en IEML tu auras besoin du vocabulaire présent dans certaines pages du dictionnaire IEML.
+   Sélectionne au maximum 10 pages pertinentes dans la liste suivante.
+   Répond uniquement avec leurs titres exacts (page-title), séparés par des virgules.
 
-   De quelles pages as-tu besoin pour traduire "${keyword}" ? Tu peux sélectionner jusqu'à 5 pages. 
-Répond uniquement avec les titres exacts des pages (page-title) séparés par des virgules.`;
+   Liste des pages disponibles:
+   [Functional roles, Primitives, Technical functions, Human development, Operations, Actions & agents, Disciplines & their objects, ... etc.]`;
 
   const response = await fetch("https://api.together.xyz/v1/chat/completions", {
     method: "POST",
@@ -195,14 +112,19 @@ Répond uniquement avec les titres exacts des pages (page-title) séparés par d
   return text.split(/[,;\n]+/).map(t => t.trim()).filter(Boolean);
 }
 
+// 🔹 Estimate number of tokens (approx.)
+function estimateTokens(text) {
+  return Math.ceil(text.split(/\s+/).length / 0.75); // rough 1 token ≈ 0.75 words
+}
+
 // 🔹 Phase 2: translation
 async function translateKeywordToIEML(keyword, pageData) {
-  const model = "google/gemma-3n-E4B-it";;
-
+  // const model = "google/gemma-3n-E4B-it";
+  const model = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free";
   const context = pageData.map(p =>
     `### ${p["page-title"]}
-Français: ${p.fr.join(", ")}`
-  ).join("\n\n"); // suppr anglais pour réduire input size
+Mots-concepts: ${p.fr.join(", ")}`
+  ).join("\n\n");
 
   const prompt = `Tu es un agent traducteur IEML. 
 Tu disposes des pages suivantes du dictionnaire IEML pour traduire le mot "${keyword}":  
@@ -210,15 +132,8 @@ Tu disposes des pages suivantes du dictionnaire IEML pour traduire le mot "${key
 ${context}
 
 Traduis le mot-clé "${keyword}" en IEML sous la forme :
-mot,theme,qui,quoi,a_qui,par_quoi,quand,ou,pourquoi,comment. 
-Exemples de mots-clés traduits en IEML:
-   "mot,theme,qui,quoi,a_qui,par_quoi,quand,ou,pourquoi,comment 
-   arts plastiques,transformer,~plusieurs art,matériau,,,,,, 
-   théorie de la littérature,théorie,,littérature,,,,,, 
-   théorie musico-littéraire,théorie,,littérature &et musique,,,,,,
-   littératie visuelle numérique,compétence,,culture visuelle,,,,,*dans le contexte de technique numérique, 
-   didactique de la lecture numérique,enseignement,,lire,,*par le moyen de technique numérique,,,,*avec méthode" 
-Donne uniquement la ligne CSV finale,correspondant au mot-clé "${keyword}", sans explication, ni avant ni après.`;
+mot,theme,qui,quoi,a_qui,par_quoi,quand,ou,pourquoi,comment.
+Répond uniquement avec la ligne CSV finale, sans explication.`;
 
   const response = await fetch("https://api.together.xyz/v1/chat/completions", {
     method: "POST",
@@ -239,7 +154,7 @@ Donne uniquement la ligne CSV finale,correspondant au mot-clé "${keyword}", san
   }
 
   const data = await response.json();
-  console.log("Together raw response:", JSON.stringify(data, null, 2));
+  console.log("🗣️ Together raw response:", JSON.stringify(data, null, 2));
 
   return data.choices?.[0]?.message?.content?.trim() || "";
 }
