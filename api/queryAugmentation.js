@@ -1,4 +1,4 @@
-// api/chat.js (Vercel serverless function)
+// api/queryAugmentation
 export default async function handler(req, res) {
     // --- CORS headers ---
     res.setHeader("Access-Control-Allow-Origin", "*"); // For tighter security, restrict to your extension origin
