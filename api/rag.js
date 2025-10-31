@@ -205,9 +205,8 @@ async function translateKeywordToIEML(keyword, pageData) {
 
   const context = pageData.map(p =>
     `### ${p["page-title"]}
-Français: ${p.fr.join(", ")}
-Anglais: ${p.en.join(", ")}`
-  ).join("\n\n");
+Français: ${p.fr.join(", ")}`
+  ).join("\n\n"); // suppr anglais pour réduire input size
 
   const prompt = `Tu es un agent traducteur IEML. 
 Tu disposes des pages suivantes du dictionnaire IEML : 
